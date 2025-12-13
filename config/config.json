@@ -1,0 +1,16 @@
+{
+    "vocab_size": 32000,
+    "d_model": 768,
+    "n_layers": 12,
+    "max_len": 2048,
+    "n_heads": 12,
+    "d_ff": 3072,
+    "dropout": 0.1,
+    "device": "cuda",
+    "use_gradient_checkpointing": false,
+    "use_rope": true,
+    "use_flash_mha": false,
+    "use_rms_norm": true,
+    "use_biasless_norm": false,
+    "use_fused_swiglu": true
+}

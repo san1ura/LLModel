@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  transformer-api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_AVAILABLE=${CUDA_AVAILABLE:-false}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: ["python", "main.py", "api", "--host", "0.0.0.0", "--port", "8000"]
+    
+  transformer-trainer:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_AVAILABLE=${CUDA_AVAILABLE:-false}
+    command: ["python", "main.py", "train", "--data-path", "/app/data/raw/training.txt", "--tokenizer-path", "/app/weights/tokenizer.model", "--epochs", "3"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  data-volume:
+  models-volume:

@@ -1,0 +1,21 @@
+{
+  "vocab_size": 32000,
+  "d_model": 512,
+  "n_layers": 8,
+  "n_heads": 8,
+  "d_ff": 1024,
+  "max_len": 512,
+  "dropout": 0.1,
+  "pad_token_id": 0,
+  "bos_token_id": 1,
+  "eos_token_id": 2,
+  "use_rope": true,
+  "pos_type": "rope",
+  "use_gradient_checkpointing": true,
+  "attention_type": "standard",
+  "norm_first": true,
+  "initializer_range": 0.02,
+  "rms_norm_eps": 1e-06,
+  "use_parallel_ffn": true,
+  "tie_word_embeddings": true
+}
