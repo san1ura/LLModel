@@ -1,0 +1,4 @@
+Transformers are deep learning models that have revolutionized natural language processing.
+    The attention mechanism allows the model to focus on different parts of the input when making predictions.
+    These models have enabled significant advances in tasks like translation, summarization, and question answering.
+    
