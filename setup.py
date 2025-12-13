@@ -14,7 +14,7 @@ setup(
     description="A comprehensive transformer-based language model implementation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/san1ura/model",
+    url="https://github.com/san1ura/LLModel",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
