@@ -343,7 +343,7 @@ class TokenizerWrapper:
         if torch.is_tensor(batch_token_ids):
             batch_token_ids = batch_token_ids.tolist()
 
-        if HAS_SENTENCEPIECE:
+        if HAS_SENTENCEPIECE and hasattr(self.tokenizer, 'batch_decode'):
             return self.tokenizer.batch_decode(batch_token_ids)
         else:
             return self.tokenizer.decode_batch(batch_token_ids)
