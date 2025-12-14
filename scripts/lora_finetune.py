@@ -8,7 +8,7 @@ import torch.nn as nn
 import argparse
 from torch.utils.data import DataLoader, Dataset
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 from data.preprocessed.build_dataset import PreprocessedDataset, DataCollator
 from peft import LoraConfig, get_peft_model, TaskType
 
@@ -116,7 +116,7 @@ def train_lora_model(
     print(f"LoRA model created with {sum(p.numel() for p in lora_model.parameters() if p.requires_grad):,} trainable parameters")
     
     # Load tokenizer
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
     
     # Prepare dataset
     print("Loading dataset...")

@@ -6,7 +6,7 @@ import torch
 import tempfile
 import os
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 from evaluation.benchmarks.model_eval import ModelEvaluator, run_gsm8k_evaluation, run_mmlu_evaluation, run_truthfulqa_evaluation, run_benchmark_suite, calculate_bloom_eval_score
 
 
@@ -22,76 +22,30 @@ class TestModelEvaluator(unittest.TestCase):
             max_len=32
         )
         self.model = Transformer(self.config)
-        
+
         # Create a temporary tokenizer file for testing
         with tempfile.TemporaryDirectory() as tmp_dir:
-            self.tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.json")
-            
-            # Create a simple vocab for the tokenizer
-            import json
-            from tokenizers import Tokenizer
-            from tokenizers.models import BPE
-            
-            vocab = {"<pad>": 0, "<unk>": 1, "<s>": 2, "</s>": 3, "test": 4, "sentence": 5, ".": 6}
-            # Create a simple tokenizer structure
-            tokenizer = Tokenizer(BPE())
-            # Save it in a proper format
-            # For simplicity, we'll create a basic tokenizer file manually
-            tokenizer_json = {
-                "version": "1.0",
-                "truncation": None,
-                "padding": None,
-                "model": {
-                    "type": "BPE",
-                    "dropout": None,
-                    "unk_token": "<unk>",
-                    "continuing_subword_prefix": None,
-                    "end_of_word_suffix": None,
-                    "fuse_unk": False,
-                    "vocab": vocab,
-                    "merges": []
-                },
-                "pre_tokenizer": {
-                    "type": "ByteLevel",
-                    "add_prefix_space": False,
-                    "trim_offsets": True,
-                    "use_regex": True
-                },
-                "post_processor": {
-                    "type": "TemplateProcessing",
-                    "single": [
-                        {"SpecialToken": {"id": "<s>", "type_id": 0}},
-                        {"Sequence": {"id": "A", "type_id": 0}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 0}}
-                    ],
-                    "pair": [
-                        {"SpecialToken": {"id": "<s>", "type_id": 0}},
-                        {"Sequence": {"id": "A", "type_id": 0}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 0}},
-                        {"Sequence": {"id": "B", "type_id": 1}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 1}}
-                    ],
-                    "special_tokens": {
-                        "<s>": {
-                            "id": "<s>",
-                            "ids": [2],
-                            "tokens": ["<s>"]
-                        },
-                        "</s>": {
-                            "id": "</s>",
-                            "ids": [3],
-                            "tokens": ["</s>"]
-                        }
-                    }
-                },
-                "decoder": {"type": "ByteLevel", "add_prefix_space": False, "trim_offsets": True, "use_regex": True},
-                "normalizer": None
-            }
-            
-            with open(self.tokenizer_path, 'w') as f:
-                json.dump(tokenizer_json, f)
-            
-            self.tokenizer = TokenizerWrapper(tokenizer_path=self.tokenizer_path)
+            self.tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.model")
+
+            # Create a tokenizer using SentencePiece
+            from tokenizer.train_tokenizer import TokenizerTrainer
+
+            # Create a trainer with appropriate settings
+            trainer = TokenizerTrainer(
+                vocab_size=100,
+                special_tokens=["<pad>", "<unk>", "<s>", "</s>"]
+            )
+
+            # Train tokenizer on sample texts
+            sample_texts = [
+                "This is a test sentence.",
+                "Another test sentence for evaluation.",
+                "More text for the tokenizer to learn from.",
+                "Various words to build vocabulary."
+            ]
+
+            # Create tokenizer model file
+            self.tokenizer = trainer.train_from_texts(sample_texts, self.tokenizer_path)
 
     def test_evaluator_creation(self):
         """Test that model evaluator can be created"""
@@ -188,73 +142,30 @@ class TestEvaluationUtilities(unittest.TestCase):
             max_len=32
         )
         self.model = Transformer(self.config)
-        
+
         # Create a temporary tokenizer file for testing
         with tempfile.TemporaryDirectory() as tmp_dir:
-            self.tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.json")
-            
-            # Create a simple vocab for the tokenizer
-            import json
-            from tokenizers import Tokenizer
-            from tokenizers.models import BPE
-            
-            vocab = {"<pad>": 0, "<unk>": 1, "<s>": 2, "</s>": 3, "test": 4, "sentence": 5, ".": 6}
-            
-            tokenizer_json = {
-                "version": "1.0",
-                "truncation": None,
-                "padding": None,
-                "model": {
-                    "type": "BPE",
-                    "dropout": None,
-                    "unk_token": "<unk>",
-                    "continuing_subword_prefix": None,
-                    "end_of_word_suffix": None,
-                    "fuse_unk": False,
-                    "vocab": vocab,
-                    "merges": []
-                },
-                "pre_tokenizer": {
-                    "type": "ByteLevel",
-                    "add_prefix_space": False,
-                    "trim_offsets": True,
-                    "use_regex": True
-                },
-                "post_processor": {
-                    "type": "TemplateProcessing",
-                    "single": [
-                        {"SpecialToken": {"id": "<s>", "type_id": 0}},
-                        {"Sequence": {"id": "A", "type_id": 0}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 0}}
-                    ],
-                    "pair": [
-                        {"SpecialToken": {"id": "<s>", "type_id": 0}},
-                        {"Sequence": {"id": "A", "type_id": 0}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 0}},
-                        {"Sequence": {"id": "B", "type_id": 1}},
-                        {"SpecialToken": {"id": "</s>", "type_id": 1}}
-                    ],
-                    "special_tokens": {
-                        "<s>": {
-                            "id": "<s>",
-                            "ids": [2],
-                            "tokens": ["<s>"]
-                        },
-                        "</s>": {
-                            "id": "</s>",
-                            "ids": [3],
-                            "tokens": ["</s>"]
-                        }
-                    }
-                },
-                "decoder": {"type": "ByteLevel", "add_prefix_space": False, "trim_offsets": True, "use_regex": True},
-                "normalizer": None
-            }
-            
-            with open(self.tokenizer_path, 'w') as f:
-                json.dump(tokenizer_json, f)
-            
-            self.tokenizer = TokenizerWrapper(tokenizer_path=self.tokenizer_path)
+            self.tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.model")
+
+            # Create a tokenizer using SentencePiece
+            from tokenizer.train_tokenizer import TokenizerTrainer
+
+            # Create a trainer with appropriate settings
+            trainer = TokenizerTrainer(
+                vocab_size=100,
+                special_tokens=["<pad>", "<unk>", "<s>", "</s>"]
+            )
+
+            # Train tokenizer on sample texts
+            sample_texts = [
+                "This is a test sentence.",
+                "Another test sentence for evaluation.",
+                "More text for the tokenizer to learn from.",
+                "Various words to build vocabulary."
+            ]
+
+            # Create tokenizer model file
+            self.tokenizer = trainer.train_from_texts(sample_texts, self.tokenizer_path)
 
     def test_save_results_functionality(self):
         """Test saving evaluation results"""

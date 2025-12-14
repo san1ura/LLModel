@@ -7,7 +7,7 @@ import sys
 import torch
 from torch.utils.data import DataLoader
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper, train_default_tokenizer
+from tokenizer.train_tokenizer import SentencePieceTokenizer, train_default_tokenizer
 from data.preprocessed.build_dataset import PreprocessedDataset, DataCollator
 from training.trainer import OptimizedTrainer
 from data.prepare_lmsys_dataset import prepare_lmsys_dataset_for_training

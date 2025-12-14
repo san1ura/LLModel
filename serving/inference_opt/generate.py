@@ -69,6 +69,8 @@ class InferenceEngine:
             ids_tensor = torch.tensor(ids, dtype=torch.long) if not torch.is_tensor(ids) else ids.clone().detach()
             # Pad if necessary
             pad_token_id = getattr(self.tokenizer, 'pad_token_id', self.config.pad_token_id)
+            if callable(pad_token_id):
+                pad_token_id = pad_token_id()
             if len(ids_tensor) < max_len:
                 padded_ids = torch.nn.functional.pad(ids_tensor, (0, max_len - len(ids_tensor)), value=int(pad_token_id))
             else:
@@ -79,7 +81,10 @@ class InferenceEngine:
         input_ids = torch.stack(padded_input_ids).to(self.device)
 
         # Create attention mask (1 for real tokens, 0 for padding) - but we won't pass this to the model for now
-        attention_mask = (input_ids != int(getattr(self.tokenizer, 'pad_token_id', self.config.pad_token_id))).long().to(self.device)
+        pad_token_id = getattr(self.tokenizer, 'pad_token_id', self.config.pad_token_id)
+        if callable(pad_token_id):
+            pad_token_id = pad_token_id()
+        attention_mask = (input_ids != int(pad_token_id)).long().to(self.device)
 
         return {
             'input_ids': input_ids,
@@ -137,8 +142,12 @@ class InferenceEngine:
         # Use the model's built-in generate method which should handle everything properly
         if pad_token_id is None:
             pad_token_id = getattr(self.tokenizer, 'pad_token_id', self.config.pad_token_id)
+            if callable(pad_token_id):
+                pad_token_id = pad_token_id()
         if eos_token_id is None:
             eos_token_id = getattr(self.tokenizer, 'eos_token_id', self.config.eos_token_id)
+            if callable(eos_token_id):
+                eos_token_id = eos_token_id()
 
         with torch.no_grad():
             generated = self.model.generate(

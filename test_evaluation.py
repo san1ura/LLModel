@@ -5,7 +5,7 @@ Evaluation script to measure the model's performance on test data
 import os
 import torch
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 from torch.utils.data import DataLoader
 from data.preprocessed.build_dataset import PreprocessedDataset, DataCollator
 from evaluation.benchmarks.model_eval import ModelEvaluator
@@ -60,7 +60,7 @@ def evaluate_model():
     
     # Load tokenizer
     if os.path.exists("test_tokenizer.json"):
-        tokenizer = TokenizerWrapper.from_pretrained("test_tokenizer.json")
+        tokenizer = SentencePieceTokenizer.from_pretrained("test_tokenizer.json")
     else:
         print("Tokenizer not found, skip evaluation")
         return

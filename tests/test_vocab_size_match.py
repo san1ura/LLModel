@@ -14,7 +14,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 
 
 def test_model_tokenizer_vocab_size_match():
@@ -35,7 +35,7 @@ def test_model_tokenizer_vocab_size_match():
     if not os.path.exists(tokenizer_path):
         pytest.skip(f"Tokenizer not found at {tokenizer_path}, skipping test")
         
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
     
     # Get vocab sizes
     model_vocab_size = model.embed.weight.shape[0]
@@ -74,7 +74,7 @@ def test_resize_token_embeddings():
     if not os.path.exists(tokenizer_path):
         pytest.skip(f"Tokenizer not found at {tokenizer_path}, skipping test")
         
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
     
     # Initially, they should not match
     model_vocab_size = model.embed.weight.shape[0]
@@ -110,7 +110,7 @@ def test_tokenizer_generation_edge_cases():
     if not os.path.exists(tokenizer_path):
         pytest.skip(f"Tokenizer not found at {tokenizer_path}, skipping test")
     
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
     
     # Test with various input types that may cause issues
     test_inputs = [

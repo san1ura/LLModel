@@ -3,11 +3,11 @@ Main initialization file for the transformer model project
 Exports key classes and functions
 """
 from .model.transformer import Transformer, Config
-from .tokenizer.train_tokenizer import TokenizerWrapper, TokenizerTrainer
+from .tokenizer.train_tokenizer import SentencePieceTokenizer, TokenizerTrainer
 from .data.preprocessed.build_dataset import (
-    PreprocessedDataset, 
-    TextProcessor, 
-    DataCollator, 
+    PreprocessedDataset,
+    TextProcessor,
+    DataCollator,
     build_pretrain_dataset,
     SFTDataset
 )
@@ -15,9 +15,9 @@ from .training.trainer import OptimizedTrainer as Trainer, PreTrainer, SFTTraine
 from .serving.inference_opt.generate import InferenceEngine, ModelServer
 from .evaluation.benchmarks.model_eval import ModelEvaluator, run_benchmark_suite
 from .optim.schedule import (
-    LionOptimizer, 
-    Adafactor, 
-    CosineSchedulerWithWarmup, 
+    LionOptimizer,
+    Adafactor,
+    CosineSchedulerWithWarmup,
     LinearWithWarmupScheduler,
     get_optimizer,
     get_scheduler
@@ -33,33 +33,33 @@ __all__ = [
     # Model components
     'Transformer',
     'Config',
-    
+
     # Tokenizer components
-    'TokenizerWrapper',
+    'SentencePieceTokenizer',
     'TokenizerTrainer',
-    
+
     # Data components
     'PreprocessedDataset',
     'TextProcessor',
     'DataCollator',
     'build_pretrain_dataset',
     'SFTDataset',
-    
+
     # Training components
     'Trainer',
     'PreTrainer',
     'SFTTrainer',
     'RLHFTrainer',
     'DPOTrainer',
-    
+
     # Serving components
     'InferenceEngine',
     'ModelServer',
-    
+
     # Evaluation components
     'ModelEvaluator',
     'run_benchmark_suite',
-    
+
     # Optimization components
     'LionOptimizer',
     'Adafactor',
@@ -67,12 +67,12 @@ __all__ = [
     'LinearWithWarmupScheduler',
     'get_optimizer',
     'get_scheduler',
-    
+
     # Evolution components
     'EvolutionEngine',
     'SelfImprovementLoop',
     'EvolutionConfig',
-    
+
     # Version
     '__version__',
     '__author__'

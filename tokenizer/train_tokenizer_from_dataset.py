@@ -23,7 +23,7 @@ except ImportError:
     USE_SENTENCEPIECE = False
     print("Using tokenizers library for training")
 
-
+#custom dataset for test!
 def train_tokenizer_from_lmsys_dataset(
     dataset_name="ytz20/LMSYS-Chat-GPT-5-Chat-Response",
     output_path="weights/tokenizer.model",

@@ -3,7 +3,7 @@ import torch
 import tempfile
 import os
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper, TokenizerTrainer
+from tokenizer.train_tokenizer import SentencePieceTokenizer, TokenizerTrainer
 from training.trainer import OptimizedTrainer
 from serving.inference_opt.generate import InferenceEngine
 
@@ -54,8 +54,8 @@ class TestModelIntegration(unittest.TestCase):
     
     def test_tokenizer_integration(self):
         """Test tokenizer integration with the model."""
-        # Create a simple tokenizer
-        trainer = TokenizerTrainer(vocab_size=1000)
+        # Create a simple tokenizer with a smaller vocab size appropriate for the small training data
+        trainer = TokenizerTrainer(vocab_size=50)
         # Train on some sample text
         sample_texts = ["hello world", "test tokenizer", "integration test"]
         
@@ -65,12 +65,13 @@ class TestModelIntegration(unittest.TestCase):
             for text in sample_texts:
                 f.write(text + "\n")
         
-        tokenizer_path = os.path.join(self.temp_dir, "tokenizer.json")
-        tokenizer = trainer.train_from_files([train_file], tokenizer_path)
-        
-        # Wrap with our tokenizer wrapper
-        wrapper = TokenizerWrapper(tokenizer_path=tokenizer_path)
-        
+        # Update tokenizer path to use .model extension for SentencePiece
+        tokenizer_model_path = os.path.join(self.temp_dir, "tokenizer.model")
+        tokenizer = trainer.train_from_files([train_file], tokenizer_model_path)
+
+        # Wrap with SentencePiece tokenizer
+        wrapper = SentencePieceTokenizer.from_pretrained(tokenizer_model_path)
+
         # Test encoding/decoding
         test_text = "hello world"
         encoded = wrapper.encode(test_text)
@@ -190,16 +191,17 @@ class TestTokenizerAdvanced(unittest.TestCase):
             for text in sample_texts:
                 f.write(text + "\n")
         
-        # Train tokenizer
-        trainer = TokenizerTrainer(vocab_size=500)
-        tokenizer_path = os.path.join(self.temp_dir, "test_tokenizer.json")
-        tokenizer = trainer.train_from_files([train_file], tokenizer_path)
-        
+        # Train tokenizer with a smaller vocab size appropriate for the small training data
+        trainer = TokenizerTrainer(vocab_size=100)
+        # Update tokenizer path to use .model extension for SentencePiece
+        tokenizer_model_path = os.path.join(self.temp_dir, "test_tokenizer.model")
+        tokenizer = trainer.train_from_files([train_file], tokenizer_model_path)
+
         # Verify tokenizer file exists
-        self.assertTrue(os.path.exists(tokenizer_path))
-        
+        self.assertTrue(os.path.exists(tokenizer_model_path))
+
         # Test tokenizer functionality
-        wrapper = TokenizerWrapper(tokenizer_path=tokenizer_path)
+        wrapper = SentencePieceTokenizer.from_pretrained(tokenizer_model_path)
         text = "This is a test."
         encoded = wrapper.encode(text)
         decoded = wrapper.decode(encoded)

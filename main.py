@@ -87,8 +87,8 @@ def train_command(args):
         train_dataset = PreprocessedDataset(args.data_path, block_size=config.max_len, vocab_size=model.config.vocab_size)
 
         # Load tokenizer to get pad token id
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path or "weights/tokenizer.model")
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path or "weights/tokenizer.model")
 
         # Make sure model's embedding size matches tokenizer's vocab size
         tokenizer_vocab_size = tokenizer.tokenizer.get_vocab_size()
@@ -165,8 +165,8 @@ def generate_command(args):
             model.load_state_dict(torch.load(args.model_path))
 
         # Load tokenizer
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path)
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path)
 
         # Import the inference engine
         from serving.inference_opt.generate import InferenceEngine
@@ -265,8 +265,8 @@ def api_command(args):
         model = Transformer(config)
 
         # Load tokenizer
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path)
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path)
 
         # Create server app
         from serving.inference_opt.generate import ModelServer
@@ -298,8 +298,8 @@ def evaluate_command(args):
             model.load_state_dict(torch.load(args.model_path))
 
         # Load tokenizer
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path)
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path)
 
         # Create evaluator
         from evaluation.benchmarks.model_eval import ModelEvaluator
@@ -323,8 +323,8 @@ def benchmark_command(args):
         model = Transformer(config)
 
         # Load tokenizer
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path)
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path)
 
         # Import benchmarking tools
         from serving.inference_opt.generate import InferenceEngine
@@ -352,8 +352,8 @@ def evolve_command(args):
         model = Transformer(config)
 
         # Load tokenizer
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        tokenizer = TokenizerWrapper.from_pretrained(args.tokenizer_path)
+        from tokenizer.train_tokenizer import SentencePieceTokenizer
+        tokenizer = SentencePieceTokenizer.from_pretrained(args.tokenizer_path)
 
         # Create evolution engine
         from evolution.evo_loop import EvolutionEngine, EvolutionConfig, evolution_evaluation_function

@@ -233,20 +233,47 @@ class TestDatasetUtilities(unittest.TestCase):
 
     def test_tokenizer_integration(self):
         """Test integration with tokenizer"""
-        from tokenizer.train_tokenizer import TokenizerWrapper
-        
-        tokenizer = TokenizerWrapper(tokenizer_path=self.tokenizer_path)
-        
-        # Test encoding
-        text = "hello world test"
-        encoded = tokenizer.encode(text)
-        
-        self.assertIsInstance(encoded, list)
-        self.assertGreater(len(encoded), 0)
-        
-        # Test decoding
-        decoded = tokenizer.decode(encoded)
-        self.assertIsInstance(decoded, str)
+        from tokenizer.train_tokenizer import TokenizerTrainer
+        import tempfile
+        import os
+
+        # Create a temporary file for the tokenizer
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.model') as tmp_tokenizer_file:
+            tmp_tokenizer_path = tmp_tokenizer_file.name
+
+        try:
+            # Create a trainer with appropriate settings
+            trainer = TokenizerTrainer(
+                vocab_size=50,
+                special_tokens=["<pad>", "<unk>", "<s>", "</s>"]
+            )
+
+            # Train tokenizer on sample texts
+            sample_texts = [
+                "hello world test",
+                "This is a test sentence.",
+                "Another test sentence for training.",
+                "More text for the tokenizer to learn from.",
+                "Various words to build vocabulary."
+            ]
+
+            # Create tokenizer model file
+            tokenizer = trainer.train_from_texts(sample_texts, tmp_tokenizer_path)
+
+            # Test encoding
+            text = "hello world test"
+            encoded = tokenizer.encode(text)
+
+            self.assertIsInstance(encoded, list)
+            self.assertGreater(len(encoded), 0)
+
+            # Test decoding
+            decoded = tokenizer.decode(encoded)
+            self.assertIsInstance(decoded, str)
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(tmp_tokenizer_path):
+                os.remove(tmp_tokenizer_path)
 
 
 def run_data_tests():

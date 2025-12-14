@@ -21,7 +21,7 @@ sys.path.insert(0, project_root)
 
 from tests.logging_config import setup_test_logging, log_test_start, log_test_step, log_test_success, log_test_failure
 from model.transformer import Config, Transformer, TransformerBlock
-from tokenizer.train_tokenizer import TokenizerTrainer, TokenizerWrapper, create_tokenizer_from_vocab
+from tokenizer.train_tokenizer import TokenizerTrainer, SentencePieceTokenizer, create_tokenizer_from_vocab
 from training.trainer import OptimizedTrainer as Trainer, PreTrainer, SFTTrainer, RLHFTrainer, DPOTrainer, train_model, LionOptimizer
 from serving.inference_opt.generate import InferenceEngine, AsyncInferenceEngine, ModelServer
 from optim.lora import LoRALinear, LoRAConfig, apply_lora_to_model, LoRATrainer
@@ -256,8 +256,12 @@ class TestTokenizerFeatures(unittest.TestCase):
         log_test_start("TestTokenizerFeatures.test_tokenizer_trainer_creation")
         log_test_step("TestTokenizerFeatures.test_tokenizer_trainer_creation", "Creating tokenizer trainer")
 
-        trainer = TokenizerTrainer(vocab_size=1000, model_type="BPE")
-        self.assertIsNotNone(trainer.tokenizer)
+        trainer = TokenizerTrainer(vocab_size=100, model_type="BPE")
+        # SentencePiece tokenizer trainer doesn't hold a tokenizer instance during initialization
+        # Instead, it has attributes for training configuration
+        self.assertIsNotNone(trainer.vocab_size)
+        self.assertIsNotNone(trainer.model_type)
+        self.assertIsNotNone(trainer.special_tokens)
         log_test_step("TestTokenizerFeatures.test_tokenizer_trainer_creation", "Tokenizer trainer created successfully", {
             "vocab_size": trainer.vocab_size,
             "model_type": trainer.model_type
@@ -269,17 +273,37 @@ class TestTokenizerFeatures(unittest.TestCase):
         """Test tokenizer wrapper functionality"""
         log_test_start("TestTokenizerFeatures.test_tokenizer_wrapper")
 
+        # Create model and tokenizer
+        config = Config(
+            vocab_size=100,  # Reduced vocab size to match our test tokenizer
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            max_len=64
+        )
+        model = Transformer(config)
+
         # Create a temporary tokenizer for testing
         with tempfile.TemporaryDirectory() as tmp_dir:
-            tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.json")
+            tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.model")
 
             # Create simple vocab - including <unk> token
-            vocab = {"<unk>": 0, "<pad>": 1, "<s>": 2, "</s>": 3, "hello": 4, "world": 5, "the": 6, "a": 7, "test": 8}
-            create_tokenizer_from_vocab(vocab, tokenizer_path)
+            # Create a vocab that matches the model's vocab size
+            vocab = {"<unk>": 0, "<pad>": 1, "<s>": 2, "</s>": 3}
+            # Fill rest of vocab with dummy tokens to match config.vocab_size
+            for i in range(4, config.vocab_size):  # Now matches exactly the config.vocab_size
+                vocab[f"token_{i}"] = i
 
-            log_test_step("TestTokenizerFeatures.test_tokenizer_wrapper", "Created temporary tokenizer", {"path": tokenizer_path})
+            # Create tokenizer with proper vocab size
+            trainer = TokenizerTrainer(
+                vocab_size=config.vocab_size,
+                special_tokens=["<unk>", "<pad>", "<s>", "</s>"]
+            )
 
-            tokenizer = TokenizerWrapper(tokenizer_path)
+            # Train tokenizer on a small sample text to ensure vocab compatibility
+            sample_texts = ["hello world", "test sentence", "sample text for model", "tokenization test"]
+            tokenizer = trainer.train_from_texts(sample_texts, tokenizer_path)
             log_test_step("TestTokenizerFeatures.test_tokenizer_wrapper", "Tokenizer wrapper created successfully")
 
             # Test encoding
@@ -492,7 +516,7 @@ class TestServingFeatures(unittest.TestCase):
         
         # Create model and tokenizer
         config = Config(
-            vocab_size=1000,
+            vocab_size=100,  # Reduced vocab size to match our test tokenizer
             d_model=64,
             n_layers=2,
             n_heads=4,
@@ -502,18 +526,30 @@ class TestServingFeatures(unittest.TestCase):
             eos_token_id=1
         )
         model = Transformer(config)
-        
+
         # Create temporary tokenizer
         with tempfile.TemporaryDirectory() as tmp_dir:
-            tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.json")
-            vocab = {"<unk>": 0, "<pad>": 1, "<s>": 2, "</s>": 3, "hello": 4, "world": 5, "the": 6, "a": 7, "test": 8}
-            create_tokenizer_from_vocab(vocab, tokenizer_path)
-            
-            tokenizer = TokenizerWrapper(tokenizer_path)
+            tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.model")
+            # Create a vocab that matches the model's vocab size
+            vocab = {"<unk>": 0, "<pad>": 1, "<s>": 2, "</s>": 3}
+            # Fill rest of vocab with dummy tokens to match config.vocab_size
+            for i in range(4, config.vocab_size):  # Now matches exactly the config.vocab_size
+                vocab[f"token_{i}"] = i
+
+            # Create tokenizer with proper vocab size
+            trainer = TokenizerTrainer(
+                vocab_size=config.vocab_size,
+                special_tokens=["<unk>", "<pad>", "<s>", "</s>"]
+            )
+
+            # Train tokenizer on a small sample text to ensure vocab compatibility
+            sample_texts = ["hello world", "test sentence", "sample text for model", "tokenization test"]
+            tokenizer = trainer.train_from_texts(sample_texts, tokenizer_path)
             
             log_test_step("TestServingFeatures.test_inference_engine", "Created model and tokenizer")
             
-            # Create inference engine
+            # Create inference engine - ensure it uses CPU to avoid CUDA assertion errors
+            config.device = "cpu"  # Explicitly set device to cpu for testing
             engine = InferenceEngine(model, tokenizer, config)
             log_test_step("TestServingFeatures.test_inference_engine", "Inference engine created", {
                 "engine_type": type(engine).__name__
@@ -568,7 +604,7 @@ class TestServingFeatures(unittest.TestCase):
         
         # Create model and tokenizer
         config = Config(
-            vocab_size=1000,
+            vocab_size=100,  # Reduced vocab size to match our test tokenizer
             d_model=64,
             n_layers=2,
             n_heads=4,
@@ -578,13 +614,19 @@ class TestServingFeatures(unittest.TestCase):
             eos_token_id=1
         )
         model = Transformer(config)
-        
+
         with tempfile.TemporaryDirectory() as tmp_dir:
             tokenizer_path = os.path.join(tmp_dir, "test_tokenizer.json")
-            vocab = {"<pad>": 0, "<s>": 1, "</s>": 2, "hello": 3, "world": 4}
-            create_tokenizer_from_vocab(vocab, tokenizer_path)
-            
-            tokenizer = TokenizerWrapper(tokenizer_path)
+            # Create a vocab that matches the model's vocab size
+            vocab = {"<unk>": 0, "<pad>": 1, "<s>": 2, "</s>": 3}
+            # Fill rest of vocab with dummy tokens to match config.vocab_size
+            for i in range(4, config.vocab_size):  # Now matches exactly the config.vocab_size
+                vocab[f"token_{i}"] = i
+            # Update tokenizer path to use .model extension for SentencePiece
+            tokenizer_model_path = tokenizer_path.replace('.json', '.model')
+            create_tokenizer_from_vocab(vocab, tokenizer_model_path)
+
+            tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_model_path)
             
             # Create async inference engine
             async_engine = AsyncInferenceEngine(model, tokenizer, config)
@@ -816,10 +858,12 @@ class TestAllFeaturesIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             # Create tokenizer
             tokenizer_path = os.path.join(tmp_dir, "tokenizer.json")
+            # Update tokenizer path to use .model extension for SentencePiece
+            tokenizer_model_path = tokenizer_path.replace('.json', '.model')
             vocab = {str(i): i for i in range(100)}  # Simple vocab
             vocab.update({"<unk>": 998, "<pad>": 999, "<s>": 1000, "</s>": 1001})  # Add special tokens
-            create_tokenizer_from_vocab(vocab, tokenizer_path)
-            tokenizer = TokenizerWrapper(tokenizer_path)
+            create_tokenizer_from_vocab(vocab, tokenizer_model_path)
+            tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_model_path)
             log_test_step("TestAllFeaturesIntegration.test_end_to_end_training_pipeline", "Created tokenizer", {
                 "vocab_size": tokenizer.get_vocab_size()
             })

@@ -14,7 +14,7 @@ sys.path.insert(0, project_root)
 
 from datasets import load_dataset
 from tqdm import tqdm
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 import random
 
 
@@ -40,7 +40,7 @@ def prepare_lmsys_dataset_for_training(
 
     # Load the tokenizer
     print(f"Loading tokenizer from: {tokenizer_path}")
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
 
     # Prepare output directory
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -165,7 +165,7 @@ def prepare_mixed_datasets(
                        If None, datasets will be mixed equally
     """
     print(f"Loading tokenizer from: {tokenizer_path}")
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
 
     # Prepare output directory
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -268,7 +268,7 @@ def load_and_test_dataset(dataset_path, tokenizer_path, num_samples=5):
     print(f"Testing dataset from: {dataset_path}")
     
     # Load tokenizer
-    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)
+    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)
     
     # Load dataset
     dataset = PreprocessedDataset(dataset_path, block_size=1024)  # Using smaller block for testing

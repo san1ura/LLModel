@@ -38,7 +38,7 @@
     "\n",
     "# Import model components\n",
     "from model.transformer import Transformer, Config\n",
-    "from tokenizer.train_tokenizer import TokenizerWrapper\n",
+    "from tokenizer.train_tokenizer import SentencePieceTokenizer\n",
     "from training.train import Trainer\n",
     "from evaluation.benchmarks.model_eval import ModelEvaluator\n",
     "from serving.inference_opt.generate import InferenceEngine"
@@ -93,7 +93,7 @@
     "\n",
     "# Load tokenizer\n",
     "try:\n",
-    "    tokenizer = TokenizerWrapper.from_pretrained(tokenizer_path)\n",
+    "    tokenizer = SentencePieceTokenizer.from_pretrained(tokenizer_path)\n",
     "    print(f\"Loaded tokenizer from {tokenizer_path}\")\n",
     "except FileNotFoundError:\n",
     "    print(f\"Tokenizer not found at {tokenizer_path}, please train or download one\")\n",
