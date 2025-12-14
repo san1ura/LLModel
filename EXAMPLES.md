@@ -6,7 +6,7 @@ A simple example demonstrating how to train a model from scratch:
 
 ```python
 from model.transformer import Config, Transformer
-from tokenizer.train_tokenizer import train_default_tokenizer, TokenizerWrapper
+from tokenizer.train_tokenizer import train_default_tokenizer, SentencePieceTokenizer
 from training.trainer import OptimizedTrainer
 from torch.utils.data import DataLoader
 from data.preprocessed.build_dataset import PreprocessedDataset, DataCollator
@@ -29,7 +29,7 @@ model = Transformer(config)
 # tokenizer = train_default_tokenizer(['your_data.txt'], 'tokenizer.json')
 
 # 4. Load pre-trained tokenizer (for this example)
-tokenizer = TokenizerWrapper.from_pretrained('path/to/tokenizer.json')
+tokenizer = SentencePieceTokenizer.from_pretrained('path/to/tokenizer.model')
 
 # 5. Create dataset and data loader
 dataset = PreprocessedDataset('train_data.bin', block_size=config.max_len)
@@ -53,11 +53,11 @@ An example of how to generate text with a trained model:
 ```python
 import torch
 from model.transformer import Transformer
-from tokenizer.train_tokenizer import TokenizerWrapper
+from tokenizer.train_tokenizer import SentencePieceTokenizer
 
 # Load model and tokenizer
 model = Transformer.load('path/to/model.pth')
-tokenizer = TokenizerWrapper.from_pretrained('path/to/tokenizer.json')
+tokenizer = SentencePieceTokenizer.from_pretrained('path/to/tokenizer.model')
 
 # Prepare input
 input_text = "The future of artificial intelligence"

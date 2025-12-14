@@ -344,6 +344,13 @@ The training script will:
 - Train the SentencePiece BPE model
 - Save the tokenizer to `weights/tokenizer.model`
 
+### SentencePiece Integration
+
+- **Model format**: Uses native SentencePiece `.model` format for efficient tokenization
+- **API**: Provides `SentencePieceTokenizer` wrapper with PyTorch integration
+- **Vocabulary compatibility**: Ensures tokenizer vocabulary size matches model's expected vocab size
+- **Special token handling**: Manages special tokens like BOS, EOS, PAD, and UNK appropriately
+
 ### Tokenizer-Model Compatibility
 
 - **vocab_size**: The tokenizer and model must use the same vocabulary size
