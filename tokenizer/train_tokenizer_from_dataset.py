@@ -15,15 +15,19 @@ sys.path.insert(0, project_root)
 
 # Try to import the SentencePiece trainer
 try:
-    from tokenizer.custom_sentencepiece_tokenizer import train_sentencepiece_tokenizer
+    from tokenizer.custom_sentencepiece_tokenizer import \
+        train_sentencepiece_tokenizer
+
     USE_SENTENCEPIECE = True
     print("Using SentencePiece tokenizer for training")
 except ImportError:
     from tokenizer.train_tokenizer import TokenizerTrainer
+
     USE_SENTENCEPIECE = False
     print("Using tokenizers library for training")
 
-#custom dataset for test!
+
+# custom dataset for test!
 def train_tokenizer_from_lmsys_dataset(
     dataset_name="ytz20/LMSYS-Chat-GPT-5-Chat-Response",
     output_path="weights/tokenizer.model",
@@ -84,7 +88,7 @@ def train_tokenizer_from_lmsys_dataset(
 
     # Create temporary file to store all texts
     temp_path = output_path + "_temp_training.txt"
-    with open(temp_path, 'w', encoding='utf-8') as temp_file:
+    with open(temp_path, "w", encoding="utf-8") as temp_file:
         for text in all_texts:
             # Write each text as a separate line
             temp_file.write(
@@ -96,14 +100,18 @@ def train_tokenizer_from_lmsys_dataset(
         if USE_SENTENCEPIECE:
             print("Training SentencePiece tokenizer...")
             # For SentencePiece, we need to provide the path without extension
-            output_path_no_ext = output_path.rsplit('.', 1)[0] if '.' in output_path else output_path
+            output_path_no_ext = (
+                output_path.rsplit(".", 1)[0] if "." in output_path else output_path
+            )
             trained_tokenizer = train_sentencepiece_tokenizer(
                 data_paths=[temp_path],
                 model_path=output_path_no_ext,
                 vocab_size=vocab_size,
                 model_type="bpe",  # Use BPE model type
             )
-            print(f"SentencePiece tokenizer trained successfully and saved to {output_path_no_ext}.model")
+            print(
+                f"SentencePiece tokenizer trained successfully and saved to {output_path_no_ext}.model"
+            )
         else:
             print("Training tokenizers library tokenizer...")
             trainer = TokenizerTrainer(
@@ -130,4 +138,3 @@ def train_tokenizer_from_lmsys_dataset(
 
 if __name__ == "__main__":
     train_tokenizer_from_lmsys_dataset()
-
