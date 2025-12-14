@@ -8,6 +8,14 @@ from typing import List, Union, Optional, Dict
 from sentencepiece import SentencePieceProcessor
 
 
+# For Python 3.8 compatibility
+try:
+    from typing import Literal
+except ImportError:
+    # For Python < 3.8, use typing_extensions
+    from typing_extensions import Literal
+
+
 class TokenizerTrainer:
     """
     Class for training SentencePiece tokenizers
